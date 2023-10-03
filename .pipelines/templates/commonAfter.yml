@@ -1,0 +1,43 @@
+steps:
+
+#================================================================================================
+# Key Vault
+#================================================================================================
+
+# Remove the ado agent ip from the key vault.
+- task: AzureCLI@2
+  displayName: commonAfter - Key Vault
+  condition: eq(variables['keyvaultWhitelist'], 'true')
+  inputs:
+    azureSubscription: $(adoServiceConnection)
+    scriptType: ps
+    scriptLocation: inlineScript
+    failOnStandardError: true
+    inlineScript: |
+      $agentIp = Invoke-RestMethod -Uri "https://icanhazip.com"
+      $agentIp = $agentIp.Trim()
+      Write-Host "Agent ip is: $agentIp"
+      Write-Host "Key vault name is : $(keyvaultName), and key vault subscription id is : $(keyvaultSubscriptionId)"
+      Write-Host "Removing agent ip from key vault"
+      az keyvault network-rule remove --name $(keyvaultName) --ip-address $agentIp"/32" --subscription $(keyvaultSubscriptionId)
+
+#================================================================================================
+# Terraform State
+#================================================================================================
+
+# Remove the ado agent ip from the terraform state storage account.
+- task: AzureCLI@2
+  displayName: commonAfter - TFState
+  condition: eq(variables['tfStateWhitelist'], 'true')
+  inputs:
+    azureSubscription: $(adoServiceConnection)
+    scriptType: ps
+    scriptLocation: inlineScript
+    failOnStandardError: true
+    inlineScript: |
+      $agentIp = Invoke-RestMethod -Uri "https://icanhazip.com"
+      $agentIp = $agentIp.Trim()
+      Write-Host "Agent ip is: $agentIp"
+      Write-Host "TFState resource group is : $(tfstateResourceGroup)"
+      Write-Host "TFState storage account is : $(tfstateStorageAccount)"
+      az storage account network-rule remove -g $(tfstateResourceGroup) --account-name $(tfstateStorageAccount) --ip-address $agentIp

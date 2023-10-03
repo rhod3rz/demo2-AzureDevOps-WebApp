@@ -1,0 +1,16 @@
+# Local .terraform files & directories.
+**/.terraform/*
+*.terraform*
+tfplan*
+
+# .tfstate files.
+*.tfstate
+*.tfstate.*
+
+# Secrets.
+**/secrets/*
+
+# Custom files.
+_build*.sh
+*.bak
+*.bacpac

@@ -1,0 +1,43 @@
+trigger:
+  branches:
+    include:
+      - '*'
+  paths:
+    include:
+    - /src/*
+
+pr:
+- none
+
+variables:
+  buildConfiguration: 'Release'                  # Update here.
+  acrRepo:            'todolist'                 # Update here.
+  acrName:            'acrdlnteudemoapps210713'  # Update here.
+  azureSub:           'payg2106'                 # Update here.
+
+jobs:
+
+# Build & Test Dotnet Code.
+- job: 'buildAndTestDotnet'
+  displayName: 'Build & Test Dotnet Code'
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: templates/dotnetBuild.yml
+    parameters:
+      buildConfiguration: $(buildConfiguration)
+
+# Build & Push Docker Image to ACR.
+- job: 'buildAndPushDocker'
+  displayName: 'Build & Push Docker Image to ACR'
+  dependsOn:
+  - buildAndTestDotnet
+  condition: succeeded()
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: templates/dockerBuild.yml
+    parameters:
+      acrRepo: $(acrRepo)
+      acrName: $(acrName)
+      tag: '$(Build.BuildNumber)-$(Build.SourceBranchName)'

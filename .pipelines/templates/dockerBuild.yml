@@ -1,0 +1,24 @@
+steps:
+
+# Build and push a 'versioned' image to ACR.
+- task: Docker@2
+  displayName: dockerBuild - Build And Push Versioned
+  inputs:
+    command: buildAndPush
+    buildContext: $(Build.Repository.LocalPath)
+    repository: ${{ parameters.acrRepo }}
+    dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+    containerRegistry: ${{ parameters.acrName }}
+    tags: ${{ parameters.tag }}
+
+# Build and push a 'latest' image to ACR if branch is 'prd' only.
+- task: Docker@2
+  condition: eq(variables['Build.SourceBranchName'], 'prd')
+  displayName: dockerBuild - Build And Push Latest
+  inputs:
+    command: buildAndPush
+    buildContext: $(Build.Repository.LocalPath)
+    repository: ${{ parameters.acrRepo }}
+    dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
+    containerRegistry: ${{ parameters.acrName }}
+    tags: latest

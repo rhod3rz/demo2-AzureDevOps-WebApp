@@ -1,0 +1,1 @@
+output "connection_string_failover" { value = "Server=tcp:${var.failover_group_name}.database.windows.net,1433;Initial Catalog=todolistdb;Persist Security Info=False;User ID=azuresql;Password=${data.azurerm_key_vault_secret.kv_sql_admin_password.value};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;" }

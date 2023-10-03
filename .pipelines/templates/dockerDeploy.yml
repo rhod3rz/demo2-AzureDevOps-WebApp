@@ -1,0 +1,41 @@
+steps:
+
+# If branch is 'prd', swap 'prd' out to 'stg' for easy rollback.
+- task: AzureAppServiceManage@0
+  condition: eq(variables['Build.SourceBranchName'], 'prd')
+  displayName: 'Backup prd to stg slot'
+  inputs:
+    azureSubscription: ${{ parameters.azureSub }}
+    Action:            'Swap Slots'
+    WebAppName:        ${{ parameters.webAppName }}
+    ResourceGroupName: ${{ parameters.rgName }}
+    SourceSlot:        'stg'
+
+# If branch is anything, except 'stg', deploy the web app.
+- task: AzureRmWebAppDeployment@4
+  condition: ne(variables['Build.SourceBranchName'], 'stg')
+  displayName: 'Deploy to Azure - $(Build.SourceBranchName)'
+  inputs:
+    ConnectionType:    'AzureRM'
+    azureSubscription: ${{ parameters.azureSub }}
+    appType:           'webAppContainer'
+    WebAppName:        ${{ parameters.webAppName }}
+    DockerNamespace:   '${{ parameters.acrName }}.azurecr.io'
+    DockerRepository:  ${{ parameters.acrRepo }}
+    DockerImageTag:    ${{ parameters.tag }}
+
+# If branch is 'stg', deploy the web app to the staging slot.
+- task: AzureRmWebAppDeployment@4
+  condition: eq(variables['Build.SourceBranchName'], 'stg')
+  displayName: 'Deploy to Azure - stg'
+  inputs:
+    ConnectionType:    'AzureRM'
+    azureSubscription: ${{ parameters.azureSub }}
+    appType:           'webAppContainer'
+    WebAppName:        ${{ parameters.webAppName }}
+    deployToSlotOrASE: true
+    ResourceGroupName: ${{ parameters.rgName }}
+    SlotName:          'stg'
+    DockerNamespace:   '${{ parameters.acrName }}.azurecr.io'
+    DockerRepository:  ${{ parameters.acrRepo }}
+    DockerImageTag:    ${{ parameters.tag }}

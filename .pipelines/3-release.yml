@@ -1,0 +1,103 @@
+trigger:
+- none
+
+pr:
+- none
+
+parameters:
+- name: dockerTag
+  displayName: Docker Tag (Required)
+  type: string
+
+variables:
+  acrRepo:    'todolist'                    # Update here.
+  acrName:    'acrdlnteudemoapps210713'     # Update here.
+  azureSub:   'payg2106'                    # Update here.
+  objSuffix:  'spark-231001'                # Update here; used for rg & ase name e.g. rg-prd-spark-231002
+  rgNamePrd:  'rg-prd-$(objSuffix)'         # Update here; prd & stg share the same resource group.
+  rgNameDev:  'rg-dev-$(objSuffix)'         # Update here.
+  appNamePri: 'app-prd-$(objSuffix)-pri'    # Update here.
+  appNameSec: 'app-prd-$(objSuffix)-sec'    # Update here.
+  appNameDev: 'app-dev-$(objSuffix)'        # Update here.
+
+jobs:
+
+# Deploy Docker Image to Azure PRD NTEU (Primary).
+- job: 'deployDockerToAzurePrdNTEU'
+  displayName: 'Deploy Docker Image to Azure PRD NTEU (Primary)'
+  condition: eq(variables['Build.SourceBranchName'], 'prd')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: templates/dockerDeploy.yml
+    parameters:
+      azureSub: $(azureSub)
+      acrName: $(acrName)
+      acrRepo: $(acrRepo)
+      rgName: $(rgNamePrd)
+      webAppName: $(appNamePri)
+      tag: ${{ parameters.dockerTag }}
+
+# Deploy Docker Image to Azure PRD WTEU (Secondary).
+- job: 'deployDockerToAzurePrdWTEU'
+  displayName: 'Deploy Docker Image to Azure PRD WTEU (Secondary)'
+  condition: eq(variables['Build.SourceBranchName'], 'prd')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: templates/dockerDeploy.yml
+    parameters:
+      azureSub: $(azureSub)
+      acrName: $(acrName)
+      acrRepo: $(acrRepo)
+      rgName: $(rgNamePrd)
+      webAppName: $(appNameSec)
+      tag: ${{ parameters.dockerTag }}
+
+# Deploy Docker Image to Azure DEV NTEU.
+- job: 'deployDockerToAzureDevNTEU'
+  displayName: 'Deploy Docker Image to Azure DEV NTEU'
+  condition: eq(variables['Build.SourceBranchName'], 'dev')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: templates/dockerDeploy.yml
+    parameters:
+      azureSub: $(azureSub)
+      acrName: $(acrName)
+      acrRepo: $(acrRepo)
+      rgName: $(rgNamePrd)
+      webAppName: $(appNameDev)
+      tag: ${{ parameters.dockerTag }}
+
+# Deploy Docker Image to Azure STG NTEU (Primary).
+- job: 'deployDockerToAzureStgNTEU'
+  displayName: 'Deploy Docker Image to Azure STG NTEU (Primary)'
+  condition: eq(variables['Build.SourceBranchName'], 'stg')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: templates/dockerDeploy.yml
+    parameters:
+      azureSub: $(azureSub)
+      acrName: $(acrName)
+      acrRepo: $(acrRepo)
+      rgName: $(rgNamePrd)
+      webAppName: $(appNamePri)
+      tag: ${{ parameters.dockerTag }}
+
+# Deploy Docker Image to Azure STG WTEU (Secondary).
+- job: 'deployDockerToAzureStgWTEU'
+  displayName: 'Deploy Docker Image to Azure STG WTEU (Secondary)'
+  condition: eq(variables['Build.SourceBranchName'], 'stg')
+  pool:
+    vmImage: 'ubuntu-latest'
+  steps:
+  - template: templates/dockerDeploy.yml
+    parameters:
+      azureSub: $(azureSub)
+      acrName: $(acrName)
+      acrRepo: $(acrRepo)
+      rgName: $(rgNamePrd)
+      webAppName: $(appNameSec)
+      tag: ${{ parameters.dockerTag }}
